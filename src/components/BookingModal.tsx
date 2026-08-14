@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   CheckCircle2, 
@@ -56,6 +56,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [selectedProvider, setSelectedProvider] = useState<Provider>(
     initialProvider || providers[0]
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialService) setSelectedService(initialService);
+      if (initialProvider) setSelectedProvider(initialProvider);
+    }
+  }, [isOpen, initialService, initialProvider]);
 
   const [specialInstructions, setSpecialInstructions] = useState<string>(
     'Key lockbox by main door code: 8821. Milo needs 1.5 cups kibble after walk.'

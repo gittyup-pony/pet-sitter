@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AppView, 
   UserRole, 
@@ -6,7 +6,9 @@ import {
   Booking, 
   PetProfile, 
   ServiceType, 
-  UserProfile 
+  UserProfile,
+  SingaporeDistrict,
+  PetSpecies
 } from './types';
 import { 
   MOCK_PROVIDERS, 
@@ -27,10 +29,58 @@ import { ProviderDashboard } from './components/ProviderDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TrustSafetyView } from './components/TrustSafetyView';
 
+// New Modals for Requirements
+import { AuthModal, UserAccount } from './components/AuthModal';
+import { SubscriptionsModal } from './components/SubscriptionsModal';
+import { ReviewsModal } from './components/ReviewsModal';
+
 export default function App() {
-  // Navigation & Role State
-  const [currentView, setCurrentView] = useState<AppView>('home');
+  // Navigation State
+  const [currentView, setCurrentViewInternal] = useState<AppView>('home');
   const [userRole, setUserRole] = useState<UserRole>('customer');
+
+  // Requirement #6: Browser Back Button & History Navigation Fix
+  const navigateTo = (view: AppView) => {
+    setCurrentViewInternal(view);
+    if (window.location.hash !== `#${view}`) {
+      window.history.pushState({ view }, '', `#${view}`);
+    }
+  };
+
+  useEffect(() => {
+    // Sync document title
+    document.title = 'Paw Connect Singapore';
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.view) {
+        setCurrentViewInternal(event.state.view);
+      } else {
+        const hash = window.location.hash.replace('#', '') as AppView;
+        if (hash) {
+          setCurrentViewInternal(hash);
+        } else {
+          setCurrentViewInternal('home');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Requirement #10: Account logged out by default on homepage
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
+
+  // Quick Search filters state for Requirement #4
+  const [searchFilters, setSearchFilters] = useState<{
+    service: string;
+    district: string;
+    petType: string;
+  }>({
+    service: 'all',
+    district: 'all',
+    petType: 'all'
+  });
 
   // Application Data State
   const [providers, setProviders] = useState<Provider[]>(MOCK_PROVIDERS);
@@ -38,14 +88,22 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(INITIAL_USER);
   const [bookings, setBookings] = useState<Booking[]>(INITIAL_BOOKINGS);
 
-  // Active booking for real-time tracking view
-  const activeBooking = bookings.find((b) => b.status === 'in_progress' || b.status === 'confirmed') || bookings[0];
-  const [trackingBooking, setTrackingBooking] = useState<Booking>(activeBooking);
-
-  // Booking Modal State
+  // Modals state
   const [isBookingModalOpen, setIsBookingModalOpen] = useState<boolean>(false);
   const [modalService, setModalService] = useState<ServiceType>('pet_sitting');
   const [modalProvider, setModalProvider] = useState<Provider | undefined>(undefined);
+
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+
+  const [isSubscriptionsModalOpen, setIsSubscriptionsModalOpen] = useState<boolean>(false);
+
+  const [isReviewsModalOpen, setIsReviewsModalOpen] = useState<boolean>(false);
+  const [reviewsProvider, setReviewsProvider] = useState<Provider>(MOCK_PROVIDERS[0]);
+
+  // Tracking Active Booking
+  const activeBooking = bookings.find((b) => b.status === 'in_progress' || b.status === 'confirmed') || bookings[0];
+  const [trackingBooking, setTrackingBooking] = useState<Booking>(activeBooking);
 
   // Handlers
   const handleOpenBookingModalWith = (service: ServiceType = 'pet_sitting', provider?: Provider) => {
@@ -56,7 +114,25 @@ export default function App() {
 
   const handleSelectProvider = (prov: Provider) => {
     setSelectedProvider(prov);
-    setCurrentView('provider_profile');
+    navigateTo('provider_profile');
+  };
+
+  const handleQuickSearchSubmit = (
+    service: ServiceType, 
+    district: SingaporeDistrict, 
+    petType: PetSpecies
+  ) => {
+    setSearchFilters({
+      service,
+      district,
+      petType
+    });
+    navigateTo('search');
+  };
+
+  const handleOpenReviewsModal = (prov: Provider) => {
+    setReviewsProvider(prov);
+    setIsReviewsModalOpen(true);
   };
 
   const handleCompleteBooking = (newBooking: Booking) => {
@@ -92,27 +168,56 @@ export default function App() {
     setBookings(bookings.map((b) => (b.id === bookingId ? { ...b, status } : b)));
   };
 
+  const handleLoginSuccess = (user: UserAccount) => {
+    setCurrentUser(user);
+    if (user.pets && user.pets.length > 0) {
+      setUserProfile((prev) => ({
+        ...prev,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        district: user.district,
+        address: user.address,
+        petProfiles: [...user.pets, ...prev.petProfiles]
+      }));
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    navigateTo('home');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-amber-200 selection:text-amber-900">
       {/* Top Navbar */}
       <Navbar
         currentView={currentView}
-        setCurrentView={setCurrentView}
+        setCurrentView={navigateTo}
         userRole={userRole}
         setUserRole={setUserRole}
         activeBooking={bookings.find((b) => b.status === 'in_progress')}
         onOpenBookingModal={() => handleOpenBookingModalWith('pet_sitting')}
         loyaltyPoints={userProfile.loyaltyPoints}
+        currentUser={currentUser}
+        onOpenAuthModal={(mode) => {
+          setAuthMode(mode);
+          setIsAuthModalOpen(true);
+        }}
+        onOpenSubscriptionsModal={() => setIsSubscriptionsModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Main Dynamic View Router */}
       <main className="flex-1">
         {currentView === 'home' && (
           <HomeView
-            setCurrentView={setCurrentView}
+            setCurrentView={navigateTo}
             providers={providers}
             onSelectProvider={handleSelectProvider}
             onOpenBookingModalWith={handleOpenBookingModalWith}
+            onQuickSearchSubmit={handleQuickSearchSubmit}
+            onOpenSubscriptionsModal={() => setIsSubscriptionsModalOpen(true)}
           />
         )}
 
@@ -121,14 +226,19 @@ export default function App() {
             providers={providers}
             onSelectProvider={handleSelectProvider}
             onOpenBookingModalWith={handleOpenBookingModalWith}
+            onOpenReviewsModal={handleOpenReviewsModal}
+            initialService={searchFilters.service}
+            initialDistrict={searchFilters.district}
+            initialPetType={searchFilters.petType}
           />
         )}
 
         {currentView === 'provider_profile' && (
           <ProviderProfileView
             provider={selectedProvider}
-            onBack={() => setCurrentView('search')}
+            onBack={() => navigateTo('search')}
             onOpenBookingModalWith={handleOpenBookingModalWith}
+            onOpenReviewsModal={handleOpenReviewsModal}
           />
         )}
 
@@ -136,7 +246,7 @@ export default function App() {
           <ActiveBookingView
             booking={trackingBooking}
             onUpdateBooking={handleUpdateBooking}
-            onBack={() => setCurrentView('customer_dashboard')}
+            onBack={() => navigateTo('customer_dashboard')}
           />
         )}
 
@@ -146,11 +256,11 @@ export default function App() {
             bookings={bookings}
             onSelectBooking={(b) => {
               setTrackingBooking(b);
-              setCurrentView('active_booking');
+              navigateTo('active_booking');
             }}
             onOpenBookingModal={() => handleOpenBookingModalWith('pet_sitting')}
             onSavePet={handleSavePet}
-            setCurrentView={setCurrentView}
+            setCurrentView={navigateTo}
           />
         )}
 
@@ -172,14 +282,14 @@ export default function App() {
 
         {currentView === 'trust_safety' && (
           <TrustSafetyView
-            setCurrentView={setCurrentView}
+            setCurrentView={navigateTo}
             onOpenBookingModal={() => handleOpenBookingModalWith('pet_sitting')}
           />
         )}
       </main>
 
       {/* Footer */}
-      <Footer setCurrentView={setCurrentView} />
+      <Footer setCurrentView={navigateTo} />
 
       {/* Multi-Step Booking Wizard Modal */}
       <BookingModal
@@ -191,6 +301,27 @@ export default function App() {
         pets={userProfile.petProfiles}
         onCompleteBooking={handleCompleteBooking}
         userLoyaltyPoints={userProfile.loyaltyPoints}
+      />
+
+      {/* Auth Modal (Log In / Sign Up with Pet Details) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
+        onLoginSuccess={handleLoginSuccess}
+      />
+
+      {/* Subscriptions Modal (Monthly & Annual Care+ Membership) */}
+      <SubscriptionsModal
+        isOpen={isSubscriptionsModalOpen}
+        onClose={() => setIsSubscriptionsModalOpen(false)}
+      />
+
+      {/* Reviews Popup Modal */}
+      <ReviewsModal
+        isOpen={isReviewsModalOpen}
+        onClose={() => setIsReviewsModalOpen(false)}
+        provider={reviewsProvider}
       />
     </div>
   );

@@ -2,18 +2,8 @@ import React, { useState } from 'react';
 import { 
   Star, 
   ShieldCheck, 
-  MapPin, 
-  Clock, 
-  Calendar, 
-  Heart, 
-  CheckCircle2, 
-  MessageSquare, 
   ArrowLeft,
-  ChevronRight,
-  Dog,
-  Cat,
-  Award,
-  AlertCircle
+  CheckCircle2, 
 } from 'lucide-react';
 import { Provider, ServiceType } from '../types';
 
@@ -21,12 +11,14 @@ interface ProviderProfileViewProps {
   provider: Provider;
   onBack: () => void;
   onOpenBookingModalWith: (service?: ServiceType, provider?: Provider) => void;
+  onOpenReviewsModal: (provider: Provider) => void;
 }
 
 export const ProviderProfileView: React.FC<ProviderProfileViewProps> = ({
   provider,
   onBack,
-  onOpenBookingModalWith
+  onOpenBookingModalWith,
+  onOpenReviewsModal
 }) => {
   const [activeTab, setActiveTab] = useState<'about' | 'services' | 'photos' | 'reviews'>('about');
   const [selectedService, setSelectedService] = useState<ServiceType>(
@@ -52,7 +44,7 @@ export const ProviderProfileView: React.FC<ProviderProfileViewProps> = ({
         <div className="h-36 bg-gradient-to-r from-amber-500 via-orange-400 to-amber-600 relative">
           <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-xs px-3 py-1 rounded-full text-xs font-bold text-slate-900 flex items-center space-x-1">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>SingPass Verified Partner</span>
+            <span>Verified Provider</span>
           </div>
         </div>
 
@@ -76,15 +68,20 @@ export const ProviderProfileView: React.FC<ProviderProfileViewProps> = ({
                 <p className="text-xs text-slate-500 font-medium">
                   📍 {provider.district} • Serving: {provider.serviceAreas.join(', ')}
                 </p>
-                <div className="flex items-center space-x-3 text-xs pt-1">
+
+                {/* Clickable Rating trigger for Requirement #8 */}
+                <button
+                  onClick={() => onOpenReviewsModal(provider)}
+                  className="flex items-center space-x-3 text-xs pt-1 hover:underline text-left"
+                >
                   <div className="flex items-center font-bold text-amber-500">
                     <Star className="w-4 h-4 fill-amber-400 mr-1" />
                     <span>{provider.rating}</span>
-                    <span className="text-slate-400 font-normal ml-1">({provider.reviewCount} reviews)</span>
+                    <span className="text-slate-400 font-normal ml-1">({provider.reviewCount} reviews - Click to view)</span>
                   </div>
                   <span>•</span>
                   <span className="font-bold text-slate-700">{provider.completedBookingsCount} SG Bookings</span>
-                </div>
+                </button>
               </div>
             </div>
 
@@ -110,7 +107,6 @@ export const ProviderProfileView: React.FC<ProviderProfileViewProps> = ({
           </div>
         </div>
       </div>
-
 
       {/* Tabs Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -145,12 +141,10 @@ export const ProviderProfileView: React.FC<ProviderProfileViewProps> = ({
               Pet Photos ({provider.photos.length})
             </button>
             <button
-              onClick={() => setActiveTab('reviews')}
-              className={`pb-3 transition-all border-b-2 ${
-                activeTab === 'reviews' ? 'border-amber-500 text-amber-800' : 'border-transparent text-slate-500 hover:text-slate-900'
-              }`}
+              onClick={() => onOpenReviewsModal(provider)}
+              className="pb-3 border-b-2 border-transparent text-amber-600 hover:text-amber-800 flex items-center space-x-1"
             >
-              Verified Reviews ({provider.reviews.length})
+              <span>Verified Reviews ({provider.reviews.length}) →</span>
             </button>
           </div>
 
@@ -238,30 +232,7 @@ export const ProviderProfileView: React.FC<ProviderProfileViewProps> = ({
             </div>
           )}
 
-          {/* Tab 4: Reviews */}
-          {activeTab === 'reviews' && (
-            <div className="space-y-4">
-              {provider.reviews.map((rev) => (
-                <div key={rev.id} className="bg-white rounded-2xl border border-slate-200 p-5 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-bold text-slate-900 text-sm">{rev.authorName} ({rev.authorDistrict})</p>
-                      <p className="text-[10px] text-slate-400">{rev.serviceName} • {rev.petType} • {rev.date}</p>
-                    </div>
-                    <div className="flex text-amber-400">
-                      {[...Array(rev.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-amber-400" />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium">"{rev.comment}"</p>
-                </div>
-              ))}
-            </div>
-          )}
-
         </div>
-
 
         {/* Right Column: Sticky Booking Card & Price Calculator */}
         <div className="lg:col-span-4">

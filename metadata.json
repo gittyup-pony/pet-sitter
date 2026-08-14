@@ -1,6 +1,6 @@
 {
-  "name": "PawConnect SG - Pet Services Marketplace",
-  "description": "Singapore's trusted one-stop marketplace for pet sitting, pet transport, dog walking, and pet boarding.",
-  "requestFramePermissions": [],
+  "name": "Paw Connect Singapore",
+  "description": "Singapore's trusted one-stop marketplace for pet sitting, pet transport, dog walking, pet boarding, and vet chaperones.",
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -48,7 +48,7 @@ export const TrustSafetyView: React.FC<TrustSafetyViewProps> = ({
           <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
             <ShieldCheck className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-black text-slate-900">1. SingPass ID & Police Background Check</h3>
+          <h3 className="text-lg font-black text-slate-900">1. Verified Providers</h3>
           <p className="text-xs text-slate-600 leading-relaxed">
             Every sitter and transport driver must authenticate using SingPass. We perform criminal background checks and require animal care references before any provider can receive booking requests.
           </p>
