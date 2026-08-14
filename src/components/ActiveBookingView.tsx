@@ -13,6 +13,8 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { Booking, ChatMessage } from '../types';
+import { GoogleMapsPlaceholder } from './GoogleMapsPlaceholder';
+import { GoogleCalendarPlaceholder } from './GoogleCalendarPlaceholder';
 
 interface ActiveBookingViewProps {
   booking: Booking;
@@ -158,50 +160,15 @@ export const ActiveBookingView: React.FC<ActiveBookingViewProps> = ({
             </span>
           </div>
 
-          {/* TAB 1: GPS Live Route Canvas */}
+          {/* TAB 1: GPS Live Route Canvas with Google Maps SDK API Placeholder */}
           {activeTab === 'gps' && (
-            <div className="relative flex-1 bg-slate-950 overflow-hidden flex flex-col justify-between p-4">
-              {/* Map background grid simulation */}
-              <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:20px_20px]"></div>
-
-              {/* Vector SVG Walking Path */}
-              <svg className="absolute inset-0 w-full h-full stroke-amber-400 stroke-2 fill-none">
-                <path d="M 100 350 Q 250 120 450 220 T 650 150" strokeDasharray="6 6" className="animate-pulse" />
-              </svg>
-
-              {/* Animated Position Pin */}
-              <div className="absolute top-36 right-48 flex flex-col items-center animate-bounce z-10">
-                <div className="bg-amber-500 text-slate-950 text-[11px] font-extrabold px-3 py-1 rounded-full shadow-lg border border-amber-300 flex items-center space-x-1">
-                  <span>🐕 {booking.petName} & {booking.providerName}</span>
-                </div>
-                <div className="w-5 h-5 bg-amber-400 rounded-full border-2 border-white shadow-xl"></div>
-              </div>
-
-              {/* Top Map HUD */}
-              <div className="relative z-10 bg-slate-900/90 backdrop-blur-md p-3 rounded-2xl border border-slate-800 text-xs text-white flex justify-between items-center">
-                <div>
-                  <p className="font-bold text-amber-400">📍 Bishan Park Dog Run Loop</p>
-                  <p className="text-[11px] text-slate-400">Distance: <strong>1.4 km</strong> • Pace: <strong>4.1 km/h</strong></p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-slate-400">Time Elapsed</p>
-                  <p className="font-bold text-emerald-400">28 mins</p>
-                </div>
-              </div>
-
-              {/* Bottom Updates Stream */}
-              <div className="relative z-10 bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-800 text-xs space-y-2 max-h-36 overflow-y-auto">
-                <p className="font-bold text-slate-400 uppercase text-[10px]">Timeline Milestones</p>
-                {booking.liveUpdates.map((up) => (
-                  <div key={up.id} className="flex items-start space-x-2 text-[11px] text-slate-200">
-                    <span className="text-amber-400 font-bold shrink-0">{up.timestamp}</span>
-                    <div>
-                      <p className="font-bold">{up.title}</p>
-                      <p className="text-slate-400 text-[10px]">{up.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="flex-1 overflow-hidden flex flex-col justify-between">
+              <GoogleMapsPlaceholder
+                petName={booking.petName}
+                providerName={booking.providerName}
+                locationName={booking.providerDistrict || 'Bishan Park Dog Run'}
+                className="h-full rounded-none border-0"
+              />
             </div>
           )}
 
@@ -317,6 +284,9 @@ export const ActiveBookingView: React.FC<ActiveBookingViewProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Google Calendar SDK API Placeholder Widget */}
+          <GoogleCalendarPlaceholder booking={booking} />
         </div>
 
       </div>
