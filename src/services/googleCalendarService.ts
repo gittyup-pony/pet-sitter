@@ -41,8 +41,10 @@ export interface GoogleCalendarEvent {
  * Checks if Google Calendar API keys / credentials are set.
  */
 export function isGoogleCalendarConfigured(): boolean {
-  const apiKey = process.env.GOOGLE_CALENDAR_API_KEY;
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const apiKey = (typeof process !== 'undefined' && process.env?.GOOGLE_CALENDAR_API_KEY) || 
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_CALENDAR_API_KEY) || '';
+  const clientId = (typeof process !== 'undefined' && process.env?.GOOGLE_CLIENT_ID) || 
+    (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID) || '';
   return Boolean((apiKey && apiKey.trim().length > 0) || (clientId && clientId.trim().length > 0));
 }
 

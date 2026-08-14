@@ -27,7 +27,7 @@ export const SINGAPORE_LOCATIONS = {
  * Checks if a valid Google Maps Platform API key is available.
  */
 export function isGoogleMapsConfigured(): boolean {
-  const key = process.env.GOOGLE_MAPS_PLATFORM_KEY;
+  const key = getGoogleMapsApiKey();
   return Boolean(key && key.trim().length > 0 && key !== 'YOUR_API_KEY');
 }
 
@@ -35,7 +35,13 @@ export function isGoogleMapsConfigured(): boolean {
  * Returns the configured API Key or empty string.
  */
 export function getGoogleMapsApiKey(): string {
-  return process.env.GOOGLE_MAPS_PLATFORM_KEY || '';
+  if (typeof process !== 'undefined' && process.env?.GOOGLE_MAPS_PLATFORM_KEY) {
+    return process.env.GOOGLE_MAPS_PLATFORM_KEY;
+  }
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY) {
+    return (import.meta as any).env.VITE_GOOGLE_MAPS_PLATFORM_KEY;
+  }
+  return '';
 }
 
 /**
